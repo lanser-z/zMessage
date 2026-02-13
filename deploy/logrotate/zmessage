@@ -1,0 +1,13 @@
+/opt/zmessage/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 zmessage zmessage
+    sharedscripts
+    postrotate
+        systemctl reload zmessage > /dev/null 2>&1 || true
+    endscript
+}

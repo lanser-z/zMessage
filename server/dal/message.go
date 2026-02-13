@@ -81,7 +81,7 @@ func (d *messageDAL) GetByConversation(convID int64, beforeID int64, limit int) 
 		args = append(args, beforeID)
 	}
 
-	query += ` ORDER BY created_at DESC LIMIT ?`
+	query += ` ORDER BY id DESC LIMIT ?`
 	args = append(args, limit)
 
 	rows, err := d.db.Query(query, args...)
