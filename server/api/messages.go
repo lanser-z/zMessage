@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -118,9 +119,12 @@ func handleSendMessage(svc message.Service) gin.HandlerFunc {
 		// 解析请求体
 		var req SendMessageRequest
 		if err := c.BindJSON(&req); err != nil {
+			fmt.Printf("[MSG SEND] BindJSON error: %v\n", err)
 			BadRequest(c, "无效的请求格式")
 			return
 		}
+
+		fmt.Printf("[MSG SEND] Parsed: type=%s, content=%s\n", req.Type, req.Content)
 
 		// 验证消息类型和内容
 		if req.Type == "" || req.Content == "" {

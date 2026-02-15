@@ -26,8 +26,7 @@ export class ApiClient {
 
         const config = {
             method,
-            headers,
-            ...options
+            headers
         };
 
         if (data) {

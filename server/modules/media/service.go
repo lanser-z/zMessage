@@ -128,7 +128,8 @@ func (s *service) Upload(req *UploadRequest) (*models.Media, error) {
 
 	// 重命名文件使用实际ID
 	if media.ID != 0 {
-		finalPath := s.storage.GetOriginalPath(media.ID)
+		// 构建带扩展名的最终路径
+		finalPath := filepath.Join(filepath.Dir(originalPath), fmt.Sprintf("%d%s", media.ID, ext))
 		finalThumbPath := s.storage.GetThumbnailPath(media.ID)
 
 		// 重命名原始文件
@@ -144,6 +145,11 @@ func (s *service) Upload(req *UploadRequest) (*models.Media, error) {
 			if err := s.storage.Rename(media.ThumbnailPath, finalThumbPath); err == nil {
 				media.ThumbnailPath = finalThumbPath
 			}
+		}
+
+		// 更新数据库中的路径
+		if err := s.dal.Media().Update(media); err != nil {
+			fmt.Printf("[MEDIA] Failed to update paths in DB: %v\n", err)
 		}
 	}
 

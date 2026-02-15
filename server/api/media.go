@@ -7,27 +7,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"zmessage/server/models"
 	"zmessage/server/modules/media"
+	"zmessage/server/modules/user"
 )
 
 // RegisterMediaRoutes 注册媒体路由
-func RegisterMediaRoutes(r *gin.Engine, svc media.Service) {
+func RegisterMediaRoutes(r *gin.Engine, svc media.Service, userSvc user.Service) {
 	media := r.Group("/api/media")
-	// 简单的token验证，实际应该注入user.Service
-	media.Use(func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.JSON(401, ErrorResponse{Error: "USER_UNAUTHORIZED"})
-			c.Abort()
-			return
-		}
-		// TODO: 实际项目中应该调用user.Service.ValidateToken
-		c.Set("auth", &AuthContext{UserID: 1}) // 临时使用固定用户ID
-		c.Next()
-	})
+
+	// 公开路由（不需要认证）- 用于获取图片
+	media.GET("/:id", handleGetMedia(svc))
+	media.GET("/:id/thumb", handleGetThumbnail(svc))
+
+	// 需要认证的路由
+	media.Use(AuthMiddleware(userSvc))
 	{
 		media.POST("/upload", handleUpload(svc))
-		media.GET("/:id", handleGetMedia(svc))
-		media.GET("/:id/thumb", handleGetThumbnail(svc))
 		media.DELETE("/:id", handleDeleteMedia(svc))
 	}
 }
@@ -119,6 +113,13 @@ func handleGetMedia(svc media.Service) gin.HandlerFunc {
 			return
 		}
 
+		// 获取媒体信息（需要MIME类型）
+		media, err := svc.Get(id)
+		if err != nil {
+			handleMediaError(c, err)
+			return
+		}
+
 		// 获取文件路径
 		path, _, err := svc.GetFile(id)
 		if err != nil {
@@ -126,7 +127,19 @@ func handleGetMedia(svc media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// 设置响应头并发送文件
+		// 手动设置Content-Type（因为文件可能没有扩展名）
+		if media.MimeType != "" {
+			c.Header("Content-Type", media.MimeType)
+		} else {
+			// 根据类型设置默认MIME类型
+			if media.Type == "image" {
+				c.Header("Content-Type", "image/jpeg")
+			} else if media.Type == "voice" {
+				c.Header("Content-Type", "audio/webm")
+			}
+		}
+
+		// 发送文件
 		c.File(path)
 	}
 }
@@ -183,16 +196,24 @@ func handleDeleteMedia(svc media.Service) gin.HandlerFunc {
 
 // handleMediaError 处理媒体服务错误
 func handleMediaError(c *gin.Context, err error) {
-	switch err.Error() {
-	case "MEDIA_INVALID_TYPE":
-		c.JSON(400, ErrorResponse{Error: err.Error()})
-	case "MEDIA_INVALID_SIZE":
-		c.JSON(413, ErrorResponse{Error: err.Error()})
-	case "MEDIA_NOT_FOUND":
+	// 使用错误比较而不是字符串比较
+	if err == media.ErrNotFound {
 		NotFound(c, "文件不存在")
-	default:
-		InternalError(c, err)
+		return
 	}
+	if err == media.ErrInvalidType {
+		c.JSON(400, ErrorResponse{Error: err.Error()})
+		return
+	}
+	if err == media.ErrInvalidSize {
+		c.JSON(413, ErrorResponse{Error: err.Error()})
+		return
+	}
+	if err == media.ErrAccessDenied {
+		c.JSON(403, ErrorResponse{Error: err.Error()})
+		return
+	}
+	InternalError(c, err)
 }
 
 // MediaResponse 媒体响应

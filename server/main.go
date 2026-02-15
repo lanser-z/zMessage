@@ -64,7 +64,7 @@ func main() {
 	api.RegisterUsersRoutes(r, userSvc)
 	api.RegisterConversationRoutes(r, msgSvc, userSvc, nil)
 	api.RegisterMessageRoutes(r, msgSvc, userSvc, nil)
-	api.RegisterMediaRoutes(r, mediaSvc)
+	api.RegisterMediaRoutes(r, mediaSvc, userSvc)
 
 	// SSE 路由
 	sseHandler := sse.NewHandler(userSvc)

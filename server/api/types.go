@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"zmessage/server/modules/media"
 	"zmessage/server/modules/message"
@@ -74,12 +76,17 @@ func AuthMiddleware(svc user.Service) gin.HandlerFunc {
 		// 尝试从 Authorization header 获取 token
 		token := c.GetHeader("Authorization")
 
+		// 调试日志
+		fmt.Printf("[AUTH] Path: %s, Method: %s, AuthHeader: %s\n", c.Request.URL.Path, c.Request.Method, token)
+
 		// 如果 header 为空，尝试从查询参数获取
 		if token == "" {
 			token = c.Query("token")
+			fmt.Printf("[AUTH] Token from query: %s\n", token)
 		}
 
 		if token == "" {
+			fmt.Printf("[AUTH] No token found, returning 401\n")
 			c.JSON(401, ErrorResponse{Error: "USER_UNAUTHORIZED"})
 			c.Abort()
 			return
@@ -91,13 +98,18 @@ func AuthMiddleware(svc user.Service) gin.HandlerFunc {
 			tokenStr = token[7:]
 		}
 
+		fmt.Printf("[AUTH] Validating token: %s...\n", tokenStr[:20])
+
 		// 验证Token
 		userID, err := svc.ValidateToken(tokenStr)
 		if err != nil {
+			fmt.Printf("[AUTH] Token validation failed: %v\n", err)
 			c.JSON(401, ErrorResponse{Error: "USER_INVALID_TOKEN"})
 			c.Abort()
 			return
 		}
+
+		fmt.Printf("[AUTH] Token validated successfully, userID: %d\n", userID)
 
 		// 将用户ID存入上下文
 		c.Set("auth", &AuthContext{UserID: userID})

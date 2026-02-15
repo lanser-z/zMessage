@@ -63,15 +63,51 @@ export class MessageModule {
 
     // 发送媒体消息
     async sendMedia(conversationId, mediaId, type) {
+        const currentUser = this.auth ? this.auth.getCurrentUser() : null;
+        if (!currentUser) {
+            throw new Error('用户未登录');
+        }
+
+        // 乐观更新：先保存到本地
+        const tempId = `temp_${Date.now()}`;
+        const tempMessage = {
+            id: tempId,
+            conversation_id: conversationId,
+            sender_id: currentUser.id,
+            receiver_id: null,
+            type: type,
+            content: String(mediaId),
+            status: 'sending',
+            created_at: Math.floor(Date.now() / 1000)
+        };
+
+        // 保存到本地存储（立即显示）
+        await this.store.messages.put(tempMessage);
+
+        // 通知UI更新
+        this._notifyMessageReceived(tempMessage);
+
         try {
             // 通过 HTTP API 发送
-            await this.apiClient.post(`/api/conversations/${conversationId}/messages`, {
+            const response = await this.apiClient.post(`/api/conversations/${conversationId}/messages`, {
                 type: type,
-                content: mediaId
+                content: String(mediaId)
             });
+
+            // 删除临时消息，添加真实消息
+            await this.store.messages.delete(tempId);
+            await this.store.messages.put(response);
+
+            // 通知UI删除临时消息并添加真实消息
+            this._notifyMessageDeleted(tempId);
+            this._notifyMessageReceived(response);
 
             console.log('Media message sent successfully');
         } catch (error) {
+            // 发送失败，更新状态
+            tempMessage.status = 'failed';
+            await this.store.messages.put(tempMessage);
+            this._notifyMessageReceived(tempMessage);
             console.error('Failed to send media message:', error);
             throw error;
         }

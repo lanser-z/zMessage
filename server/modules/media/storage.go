@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // NewLocalStorage 创建本地存储实现
@@ -20,7 +21,7 @@ func NewLocalStorage(dataDir string) Storage {
 
 	return &localStorage{
 		originalDir:   originalDir,
-		thumbnailDir:  thumbnailDir,
+		thumbnailDir: thumbnailDir,
 	}
 }
 
@@ -63,11 +64,13 @@ func (s *localStorage) SaveThumbnail(id int64, data []byte) (string, error) {
 
 // Delete 删除文件
 func (s *localStorage) Delete(id int64) error {
-	// 删除原始文件
-	originalPath := s.GetOriginalPath(id)
-	if _, err := os.Stat(originalPath); err == nil {
-		if err := os.Remove(originalPath); err != nil {
-			return fmt.Errorf("delete original: %w", err)
+	// 删除所有可能扩展名的原始文件
+	for _, ext := range []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp3", ".wav", ".ogg", ".webm"} {
+		originalPath := filepath.Join(s.originalDir, fmt.Sprintf("%d%s", id, ext))
+		if _, err := os.Stat(originalPath); err == nil {
+			if err := os.Remove(originalPath); err != nil {
+				return fmt.Errorf("delete original: %w", err)
+			}
 		}
 	}
 
@@ -82,8 +85,18 @@ func (s *localStorage) Delete(id int64) error {
 	return nil
 }
 
-// GetOriginalPath 获取原始文件路径
+// GetOriginalPath 获取原始文件路径（带扩展名）
 func (s *localStorage) GetOriginalPath(id int64) string {
+	// 尝试查找有扩展名的文件
+	entries, err := os.ReadDir(s.originalDir)
+	if err == nil {
+		for _, entry := range entries {
+			if strings.HasPrefix(entry.Name(), fmt.Sprintf("%d.", id)) {
+				return filepath.Join(s.originalDir, entry.Name())
+			}
+		}
+	}
+	// 如果没找到，返回不带扩展名的路径（兼容旧数据）
 	return filepath.Join(s.originalDir, fmt.Sprintf("%d", id))
 }
 

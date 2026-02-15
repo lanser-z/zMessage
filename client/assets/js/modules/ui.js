@@ -387,7 +387,7 @@ export class UIModule {
         try {
             await this.message.sendText(this.message.getCurrentConversation(), text);
             input.value = '';
-            await this._renderMessages();
+            // sendText 内部已经有乐观更新和事件通知，不需要手动刷新
         } catch (error) {
             console.error('Failed to send message:', error);
             alert('发送失败: ' + error.message);
@@ -399,8 +399,8 @@ export class UIModule {
         try {
             const file = await this.media.selectImage();
             const response = await this.media.uploadImage(file);
+            // sendMedia 内部已经有乐观更新和事件通知，不需要手动刷新
             await this.message.sendMedia(this.message.getCurrentConversation(), response.id, 'image');
-            await this._renderMessages();
         } catch (error) {
             console.error('Failed to send image:', error);
             if (error.message !== '取消选择') {
@@ -436,8 +436,8 @@ export class UIModule {
                 const audioBlob = await this.recordingState.stop();
                 const file = new File([audioBlob], 'voice.webm', { type: 'audio/webm' });
                 const response = await this.media.uploadVoice(file);
+                // sendMedia 内部已经有乐观更新和事件通知，不需要手动刷新
                 await this.message.sendMedia(this.message.getCurrentConversation(), response.id, 'voice');
-                await this._renderMessages();
             } catch (error) {
                 console.error('Failed to send voice:', error);
                 alert('发送语音失败: ' + error.message);
@@ -473,11 +473,9 @@ export class UIModule {
 
     // 处理消息删除
     async _handleMessageDeleted(messageId) {
-        // 从界面移除消息
-        const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (messageElement) {
-            messageElement.remove();
-        }
+        console.log('[UI] Message deleted:', messageId);
+        // 临时消息被删除后，真实消息已经添加，需要刷新UI
+        await this._renderMessages();
     }
 
     // 更新连接状态

@@ -112,10 +112,11 @@ func (d *mediaDAL) GetByOwner(ownerID int64) ([]*models.Media, error) {
 func (d *mediaDAL) Update(media *models.Media) error {
 	query := `
 		UPDATE media
-		SET thumbnail_path = ?, width = ?, height = ?, duration = ?
+		SET original_path = ?, thumbnail_path = ?, width = ?, height = ?, duration = ?
 		WHERE id = ?
 	`
 	result, err := d.db.Exec(query,
+		media.OriginalPath,
 		media.ThumbnailPath,
 		media.Width,
 		media.Height,
