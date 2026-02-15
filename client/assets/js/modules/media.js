@@ -104,10 +104,16 @@ export class MediaModule {
                         audioChunks.push(event.data);
                     };
 
+                    // 创建一个Promise来等待录音完成
+                    let blobResolver = null;
+                    const blobPromise = new Promise((resolve) => {
+                        blobResolver = resolve;
+                    });
+
                     mediaRecorder.onstop = () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         stream.getTracks().forEach(track => track.stop());
-                        resolve(audioBlob);
+                        blobResolver(audioBlob);
                     };
 
                     mediaRecorder.onerror = (event) => {
@@ -124,15 +130,19 @@ export class MediaModule {
                         }
                     }, maxDuration);
 
-                    // 返回停止录音的函数
+                    // 返回控制对象，stop()返回Promise
                     resolve({
-                        stop: () => mediaRecorder.stop(),
+                        stop: () => {
+                            mediaRecorder.stop();
+                            return blobPromise;
+                        },
                         cancel: () => {
                             if (mediaRecorder.state === 'recording') {
                                 mediaRecorder.stop();
                                 stream.getTracks().forEach(track => track.stop());
                             }
                             reject(new Error('取消录音'));
+                            return blobPromise.catch(() => {});
                         }
                     });
                 })

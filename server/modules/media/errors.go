@@ -55,7 +55,7 @@ var AllowedImageExts = map[string]bool{
 }
 
 var AllowedVoiceExts = map[string]bool{
-	".mp3": true, ".m4a": true, ".ogg": true, ".wav": true,
+	".mp3": true, ".m4a": true, ".ogg": true, ".wav": true, ".webm": true,
 }
 
 // MIME类型映射
