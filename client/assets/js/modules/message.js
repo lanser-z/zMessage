@@ -1,42 +1,61 @@
 // 消息模块
 export class MessageModule {
-    constructor(apiClient, connection, store) {
+    constructor(apiClient, connection, store, auth = null) {
         this.apiClient = apiClient;
         this.connection = connection;
         this.store = store;
+        this.auth = auth;
         this.conversations = [];
         this.currentConversation = null;
     }
 
     // 发送文本消息
     async sendText(conversationId, text) {
-        const message = {
+        const currentUser = this.auth ? this.auth.getCurrentUser() : null;
+        if (!currentUser) {
+            throw new Error('用户未登录');
+        }
+
+        // 乐观更新：先保存到本地
+        const tempId = `temp_${Date.now()}`; // 临时ID，用前缀标识
+        const tempMessage = {
+            id: tempId,
             conversation_id: conversationId,
+            sender_id: currentUser.id,
+            receiver_id: null,
             type: 'text',
             content: text,
-            sender_id: this.apiClient.token ? null : 0, // 临时，需要从token解析
-            created_at: Math.floor(Date.now() / 1000),
-            status: 'sending'
+            status: 'sending',
+            created_at: Math.floor(Date.now() / 1000)
         };
 
+        // 保存到本地存储（立即显示）
+        await this.store.messages.put(tempMessage);
+
+        // 通知UI更新
+        this._notifyMessageReceived(tempMessage);
+
         try {
-            // 保存到本地 (状态为sending)
-            await this.store.messages.add(message);
+            // 通过 HTTP API 发送
+            const response = await this.apiClient.post(`/api/conversations/${conversationId}/messages`, {
+                type: 'text',
+                content: text
+            });
 
-            // 通过WebSocket发送
-            const conv = this.conversations.find(c => c.id === conversationId);
-            if (conv) {
-                const payload = {
-                    to: conv.participant.id,
-                    type: 'text',
-                    content: text
-                };
+            // 删除临时消息，添加真实消息
+            await this.store.messages.delete(tempId);
+            await this.store.messages.put(response);
 
-                await this.connection.send('MsgChat', payload);
-            }
+            // 通知UI删除临时消息并添加真实消息
+            this._notifyMessageDeleted(tempId);
+            this._notifyMessageReceived(response);
 
-            return message;
+            console.log('Message sent successfully');
         } catch (error) {
+            // 发送失败，更新状态
+            tempMessage.status = 'failed';
+            await this.store.messages.put(tempMessage);
+            this._notifyMessageReceived(tempMessage);
             console.error('Failed to send text message:', error);
             throw error;
         }
@@ -44,29 +63,14 @@ export class MessageModule {
 
     // 发送媒体消息
     async sendMedia(conversationId, mediaId, type) {
-        const message = {
-            conversation_id: conversationId,
-            type: type,
-            content: mediaId,
-            created_at: Math.floor(Date.now() / 1000),
-            status: 'sending'
-        };
-
         try {
-            await this.store.messages.add(message);
+            // 通过 HTTP API 发送
+            await this.apiClient.post(`/api/conversations/${conversationId}/messages`, {
+                type: type,
+                content: mediaId
+            });
 
-            const conv = this.conversations.find(c => c.id === conversationId);
-            if (conv) {
-                const payload = {
-                    to: conv.participant.id,
-                    type: type,
-                    content: mediaId
-                };
-
-                await this.connection.send('MsgChat', payload);
-            }
-
-            return message;
+            console.log('Media message sent successfully');
         } catch (error) {
             console.error('Failed to send media message:', error);
             throw error;
@@ -75,6 +79,8 @@ export class MessageModule {
 
     // 接收消息
     async receiveMessage(payload) {
+        console.log('[Message] receiveMessage called with:', payload);
+
         const message = {
             id: payload.id,
             conversation_id: payload.conversation_id,
@@ -86,11 +92,17 @@ export class MessageModule {
             created_at: payload.created_at
         };
 
+        console.log('[Message] Saving to store:', message);
+
         // 保存到本地
         await this.store.messages.put(message);
 
+        console.log('[Message] Notifying UI');
+
         // 通知UI更新
         this._notifyMessageReceived(message);
+
+        console.log('[Message] receiveMessage completed');
     }
 
     // 获取会话列表
@@ -176,5 +188,12 @@ export class MessageModule {
     // 设置当前会话
     setCurrentConversation(conversationId) {
         this.currentConversation = conversationId;
+    }
+
+    // 通知消息删除
+    _notifyMessageDeleted(messageId) {
+        window.dispatchEvent(new CustomEvent('message:deleted', {
+            detail: messageId
+        }));
     }
 }

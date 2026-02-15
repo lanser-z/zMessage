@@ -1,10 +1,11 @@
 // UI模块
 export class UIModule {
-    constructor(auth, connection, message, media) {
+    constructor(auth, connection, message, media, apiClient) {
         this.auth = auth;
         this.connection = connection;
         this.message = message;
         this.media = media;
+        this.apiClient = apiClient;
         this.currentView = null;
         this.users = [];
         this.recordingState = null;
@@ -21,6 +22,11 @@ export class UIModule {
         // 消息接收事件
         window.addEventListener('message:received', (e) => {
             this._handleMessageReceived(e.detail);
+        });
+
+        // 消息删除事件
+        window.addEventListener('message:deleted', (e) => {
+            this._handleMessageDeleted(e.detail);
         });
 
         // 连接状态变化
@@ -151,8 +157,9 @@ export class UIModule {
         await this._loadUsers();
 
         app.innerHTML = `
+            <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="main-container">
-                <aside class="sidebar">
+                <aside class="sidebar" id="sidebar">
                     <div class="user-info">
                         <div class="user-avatar">
                             ${this.auth.getCurrentUser().nickname[0]}
@@ -173,15 +180,31 @@ export class UIModule {
                 </aside>
                 <main class="chat-area">
                     <div id="chat-container">
-                        <div class="empty-state">
-                            <p>选择一个用户开始聊天</p>
+                        <div class="chat-header">
+                            <button class="menu-btn" id="menu-btn">☰</button>
+                            <div class="chat-user-info">
+                                <span>选择用户开始聊天</span>
+                            </div>
+                        </div>
+                        <div class="messages-container" id="messages-container">
+                            <div class="empty-state">
+                                <p>从菜单选择一个用户开始聊天</p>
+                            </div>
                         </div>
                     </div>
                 </main>
             </div>
         `;
 
+        // 绑定侧边栏切换
+        document.getElementById('sidebar-overlay').addEventListener('click', () => this._toggleSidebar(false));
         document.getElementById('logout-btn').addEventListener('click', () => this._handleLogout());
+
+        // 绑定菜单按钮
+        const menuBtn = document.getElementById('menu-btn');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => this._toggleSidebar(true));
+        }
 
         // 渲染用户列表
         this._renderUserList();
@@ -190,19 +213,20 @@ export class UIModule {
     // 加载用户列表
     async _loadUsers() {
         try {
-            const response = await fetch('/api/users', {
-                headers: {
-                    'Authorization': 'Bearer ' + this.auth.getToken()
-                }
-            });
-            const result = await response.json();
-            this.users = result.data.users || result.data || result.users || result || [];
+            console.log('[UI] Loading users...');
+            const result = await this.apiClient.get('/api/users');
+            console.log('[UI] API result:', result);
+
+            this.users = result.users || result.data || result || [];
+            console.log('[UI] Parsed users:', this.users);
 
             // 过滤掉当前用户
             const currentUserId = this.auth.getCurrentUser().id;
+            console.log('[UI] Current user ID:', currentUserId);
             this.users = this.users.filter(u => u.id !== currentUserId);
+            console.log('[UI] Filtered users:', this.users);
         } catch (error) {
-            console.error('Failed to load users:', error);
+            console.error('[UI] Failed to load users:', error);
             this.users = [];
         }
     }
@@ -221,6 +245,7 @@ export class UIModule {
                 <div class="avatar">${user.nickname[0]}</div>
                 <div class="info">
                     <div class="name">${this._escapeHtml(user.nickname)}</div>
+                    <div class="username">@${this._escapeHtml(user.username)}</div>
                 </div>
             </div>
         `).join('');
@@ -236,6 +261,9 @@ export class UIModule {
     // 打开聊天
     async _openChat(userId) {
         try {
+            // 移动端选择用户后关闭侧边栏
+            this._toggleSidebar(false);
+
             // 获取或创建会话
             const conversation = await this.message.getConversationWithUser(userId);
             this.message.setCurrentConversation(conversation.id);
@@ -272,6 +300,7 @@ export class UIModule {
 
         container.innerHTML = `
             <div class="chat-header">
+                <button class="menu-btn" id="menu-btn">☰</button>
                 <div class="chat-user-info">
                     <div class="avatar">${user.nickname[0]}</div>
                     <div class="name">${this._escapeHtml(user.nickname)}</div>
@@ -292,6 +321,10 @@ export class UIModule {
         this._renderMessages();
 
         // 绑定事件
+        const menuBtn = document.getElementById('menu-btn');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => this._toggleSidebar(true));
+        }
         document.getElementById('send-btn').addEventListener('click', () => this._sendTextMessage());
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -304,7 +337,7 @@ export class UIModule {
         document.getElementById('voice-btn').addEventListener('mouseleave', () => this._cancelVoiceRecord());
     }
 
-    // 渲染消息
+    // 渲染消息（只显示最近10条）
     async _renderMessages() {
         const container = document.getElementById('messages-container');
         const messages = await this.message.getLocalMessages(this.message.getCurrentConversation());
@@ -315,10 +348,13 @@ export class UIModule {
             return;
         }
 
-        container.innerHTML = messages.map(msg => {
+        // 只显示最近10条消息
+        const recentMessages = messages.slice(-10);
+
+        container.innerHTML = recentMessages.map(msg => {
             const isOwn = msg.sender_id === currentUser.id;
             return `
-                <div class="message ${isOwn ? 'own' : 'other'}">
+                <div class="message ${isOwn ? 'own' : 'other'}" data-message-id="${msg.id}">
                     ${this._renderMessageContent(msg)}
                 </div>
             `;
@@ -423,9 +459,24 @@ export class UIModule {
 
     // 处理消息接收
     async _handleMessageReceived(message) {
+        console.log('[UI] Message received:', message);
+        console.log('[UI] Current conversation:', this.message.getCurrentConversation());
+
         // 如果是当前会话的消息, 刷新界面
         if (message.conversation_id === this.message.getCurrentConversation()) {
+            console.log('[UI] Rendering messages for current conversation');
             await this._renderMessages();
+        } else {
+            console.log('[UI] Message for different conversation, ignoring');
+        }
+    }
+
+    // 处理消息删除
+    async _handleMessageDeleted(messageId) {
+        // 从界面移除消息
+        const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageElement) {
+            messageElement.remove();
         }
     }
 
@@ -451,6 +502,21 @@ export class UIModule {
         await this.auth.logout();
         this.connection.disconnect();
         this._showLoginView();
+    }
+
+    // 切换侧边栏显示/隐藏
+    _toggleSidebar(show) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (!sidebar || !overlay) return;
+
+        if (show) {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        } else {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
     }
 
     // 工具方法

@@ -1,13 +1,19 @@
 // MessagePack 编解码封装
 import * as msgpack from 'https://cdn.jsdelivr.net/npm/msgpack-lite@0.1.26/dist/msgpack.min.js';
 
+// 主 CDN 失败时的备用源
+import * as msgpackBackup from 'https://unpkg.com/msgpack-lite@0.1.26/dist/msgpack.min.js';
+
+// 使用可用的版本（主 CDN 优先）
+const msgpackLib = typeof msgpack !== 'undefined' ? msgpack : msgpackBackup;
+
 export const codec = {
     encode(data) {
-        return msgpack.encode(data);
+        return msgpackLib.encode(data);
     },
 
     decode(buffer) {
-        return msgpack.decode(new Uint8Array(buffer));
+        return msgpackLib.decode(new Uint8Array(buffer));
     }
 };
 

@@ -16,22 +16,22 @@ import (
 
 var (
 	// ErrInvalidUsername 用户名格式无效
-	ErrInvalidUsername = fmt.Errorf("invalid username format")
+	ErrInvalidUsername = fmt.Errorf("USER_INVALID_USERNAME")
 
 	// ErrInvalidPassword 密码格式无效
-	ErrInvalidPassword = fmt.Errorf("invalid password format")
+	ErrInvalidPassword = fmt.Errorf("USER_INVALID_PASSWORD")
 
 	// ErrUserExists 用户名已存在
-	ErrUserExists = fmt.Errorf("username already exists")
+	ErrUserExists = fmt.Errorf("USER_ALREADY_EXISTS")
 
 	// ErrUserNotFound 用户不存在
-	ErrUserNotFound = fmt.Errorf("user not found")
+	ErrUserNotFound = fmt.Errorf("USER_NOT_FOUND")
 
 	// ErrInvalidToken Token无效
-	ErrInvalidToken = fmt.Errorf("invalid token")
+	ErrInvalidToken = fmt.Errorf("USER_INVALID_TOKEN")
 
 	// ErrTokenExpired Token过期
-	ErrTokenExpired = fmt.Errorf("token expired")
+	ErrTokenExpired = fmt.Errorf("USER_TOKEN_EXPIRED")
 )
 
 // RegisterRequest 注册请求

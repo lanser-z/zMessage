@@ -2,15 +2,14 @@
 import { ApiClient } from './utils/request.js';
 import { Store } from './store/index.js';
 import { AuthModule } from './modules/auth.js';
-import { ConnectionModule } from './modules/connection.js';
+import { ConnectionModule } from './modules/connection_sse.js';  // SSE 版本
 import { MessageModule } from './modules/message.js';
 import { MediaModule } from './modules/media.js';
 import { UIModule } from './modules/ui.js';
 
 // 配置
 const config = {
-    apiBaseUrl: 'http://203.83.228.222:9405',
-    wsUrl: 'ws://203.83.228.222:9405/ws'
+    apiBaseUrl: 'http://203.83.228.222:9405'
 };
 
 // 应用状态
@@ -28,7 +27,7 @@ async function init() {
 
         // 初始化业务模块
         auth = new AuthModule(apiClient, store);
-        message = new MessageModule(apiClient, null, store);
+        message = new MessageModule(apiClient, null, store, auth);
         media = new MediaModule(apiClient, store);
         connection = new ConnectionModule(auth, message, config);
 
@@ -36,7 +35,7 @@ async function init() {
         message.connection = connection;
 
         // 初始化UI
-        ui = new UIModule(auth, connection, message, media);
+        ui = new UIModule(auth, connection, message, media, apiClient);
         ui.init();
 
         console.log('Application initialized');

@@ -71,7 +71,14 @@ type ErrorResponse struct {
 // AuthMiddleware 认证中间件
 func AuthMiddleware(svc user.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 尝试从 Authorization header 获取 token
 		token := c.GetHeader("Authorization")
+
+		// 如果 header 为空，尝试从查询参数获取
+		if token == "" {
+			token = c.Query("token")
+		}
+
 		if token == "" {
 			c.JSON(401, ErrorResponse{Error: "USER_UNAUTHORIZED"})
 			c.Abort()

@@ -169,7 +169,7 @@ func handleUserError(c *gin.Context, err error) {
 	case "USER_INVALID_USERNAME":
 		BadRequest(c, "用户名格式无效")
 	case "USER_INVALID_PASSWORD":
-		BadRequest(c, "密码格式无效")
+		BadRequest(c, "密码错误")
 	case "USER_ALREADY_EXISTS":
 		c.JSON(409, ErrorResponse{Error: "USER_ALREADY_EXISTS"})
 	case "USER_NOT_FOUND":

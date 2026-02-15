@@ -14,8 +14,8 @@ import (
 const (
 	// PingInterval 心跳间隔
 	PingInterval = 30 * time.Second
-	// PongTimeout 心跳超时
-	PongTimeout = 60 * time.Second
+	// PongTimeout 心跳超时（增加到5分钟，避免频繁断开）
+	PongTimeout = 300 * time.Second
 	// MaxConnectionsPerUser 每用户最大连接数
 	MaxConnectionsPerUser = 3
 )
@@ -362,10 +362,22 @@ func (c *connection) close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	// 先关闭 websocket
+	c.conn.Close()
+
+	// 安全地关闭 channel（避免重复关闭）
+	if c.send != nil {
+		select {
+		case <-c.send:
+			// channel 已关闭或为空
+		default:
+			close(c.send)
+		}
+		c.send = nil
+	}
+
+	// 从管理器中移除连接
 	if c.userID != 0 {
 		c.mgr.removeConnection(c)
 	}
-
-	c.conn.Close()
-	close(c.send)
 }

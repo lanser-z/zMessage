@@ -5,28 +5,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"zmessage/server/modules/message"
+	"zmessage/server/modules/user"
 )
 
 // RegisterConversationRoutes 注册会话路由
-func RegisterConversationRoutes(r *gin.Engine, svc message.Service, wsMgr WSManager) {
+func RegisterConversationRoutes(r *gin.Engine, msgSvc message.Service, userSvc user.Service, wsMgr WSManager) {
 	conv := r.Group("/api/conversations")
-	// 简单的token验证，实际应该使用user.Service
-	conv.Use(func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.JSON(401, ErrorResponse{Error: "USER_UNAUTHORIZED"})
-			c.Abort()
-			return
-		}
-		// TODO: 实际项目中应该调用user.Service.ValidateToken
-		c.Set("auth", &AuthContext{UserID: 1}) // 临时使用固定用户ID
-		c.Next()
-	})
+	conv.Use(AuthMiddleware(userSvc))
 	{
-		conv.GET("", handleGetConversations(svc))
-		conv.GET("/:id", handleGetConversation(svc))
-		conv.GET("/with/:user_id", handleGetConversationWithUser(svc))
-		conv.POST("/:id/read", handleMarkAsRead(svc))
+		conv.GET("", handleGetConversations(msgSvc))
+		conv.GET("/:id", handleGetConversation(msgSvc))
+		conv.GET("/with/:user_id", handleGetConversationWithUser(msgSvc))
+		conv.POST("/:id/read", handleMarkAsRead(msgSvc))
 	}
 }
 

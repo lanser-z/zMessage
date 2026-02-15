@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"zmessage/server/modules/user"
 )
@@ -56,16 +57,22 @@ func handleLogin(svc user.Service) gin.HandlerFunc {
 			return
 		}
 
+		// 调试：打印用户名
+		fmt.Printf("[LOGIN] Attempting login for user: %s\n", req.Username)
+
 		// 调用用户服务登录
 		resp, err := svc.Login(c.Request.Context(), &user.LoginRequest{
 			Username: req.Username,
 			Password: req.Password,
 		})
 		if err != nil {
+			fmt.Printf("[LOGIN] Login failed: %v\n", err)
 			handleUserError(c, err)
 			return
 		}
 
+		clientIP := c.ClientIP()
+		fmt.Printf("[LOGIN] Login successful for user: %s (ID: %d) from %s\n", resp.User.Username, resp.User.ID, clientIP)
 		c.JSON(200, LoginResponse{
 			User: UserInfo{
 				ID:       resp.User.ID,

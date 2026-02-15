@@ -117,6 +117,16 @@ class MessageStore {
         });
     }
 
+    async delete(id) {
+        const tx = this.db.transaction(['messages'], 'readwrite');
+        const store = tx.objectStore('messages');
+        return new Promise((resolve, reject) => {
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async put(message) {
         const tx = this.db.transaction(['messages'], 'readwrite');
         const store = tx.objectStore('messages');

@@ -22,11 +22,14 @@ export class AuthModule {
 
     // 登录
     async login(username, password) {
+        console.log('[AUTH] Login attempt for:', username);
         const response = await this.apiClient.post('/api/auth/login', {
             username,
             password
         });
+        console.log('[AUTH] Login response:', response);
         await this._setAuth(response.user, response.token);
+        console.log('[AUTH] Auth set successfully');
         return response.user;
     }
 

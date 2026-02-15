@@ -21,6 +21,12 @@ export class ConnectionModule {
     connect() {
         const wsUrl = this.config.wsUrl;
         console.log('Connecting to WebSocket:', wsUrl);
+
+        // 如果已有连接，先关闭
+        if (this.ws) {
+            this.ws.close();
+        }
+
         this.ws = new WebSocket(wsUrl);
         this._setupEventHandlers();
     }
@@ -35,13 +41,23 @@ export class ConnectionModule {
 
     // 连接成功
     async _handleOpen() {
-        console.log('WebSocket connected');
+        console.log('[DEBUG] _handleOpen called, this.connected =', this.connected);
+
+        // 防止重复触发
+        if (this.connected) {
+            console.warn('Already connected, skipping authentication');
+            return;
+        }
+
+        console.log('[DEBUG] Setting this.connected = true');
         this.connected = true;
         this.reconnectAttempts = 0;
         this._notifyConnectionChange(true);
 
-        // 发送认证消息
+        // 立即发送认证消息（等待完成）
+        console.log('[DEBUG] About to call _authenticate');
         await this._authenticate();
+        console.log('[DEBUG] _authenticate completed');
     }
 
     // 认证

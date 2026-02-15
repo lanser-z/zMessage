@@ -9,14 +9,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"zmessage/server/api"
 	"zmessage/server/dal"
 	"zmessage/server/modules/media"
 	"zmessage/server/modules/message"
 	"zmessage/server/modules/user"
+	"zmessage/server/sse"
 	"zmessage/server/ws"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func main() {
@@ -42,16 +45,30 @@ func main() {
 
 	r := gin.Default()
 
-	r.Static("/assets", "./client/assets")
+	// 配置CORS中间件，允许跨域访问
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // 允许所有来源（生产环境应限制具体域名）
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: false, // 当AllowOrigins为*时必须为false
+		MaxAge:           12 * time.Hour,
+	}))
+
+	r.Static("/assets", "../client/assets")
 	r.GET("/", func(c *gin.Context) {
-		c.File("./client/index.html")
+		c.File("../client/index.html")
 	})
 
 	api.RegisterAuthRoutes(r, userSvc)
 	api.RegisterUsersRoutes(r, userSvc)
-	api.RegisterConversationRoutes(r, msgSvc, nil)
-	api.RegisterMessageRoutes(r, msgSvc, nil)
+	api.RegisterConversationRoutes(r, msgSvc, userSvc, nil)
+	api.RegisterMessageRoutes(r, msgSvc, userSvc, nil)
 	api.RegisterMediaRoutes(r, mediaSvc)
+
+	// SSE 路由
+	sseHandler := sse.NewHandler(userSvc)
+	r.GET("/api/sse/subscribe", sseHandler.Subscribe)
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -68,7 +85,7 @@ func main() {
 		wsMgr.HandleConnection(conn)
 	})
 
-	addr := ":9405"
+	addr := "0.0.0.0:9405"
 	if len(os.Args) > 2 {
 		addr = os.Args[2]
 	}
@@ -76,8 +93,8 @@ func main() {
 	server := &http.Server{
 		Addr:           addr,
 		Handler:        r,
-		ReadTimeout:     10 * time.Second,
-		WriteTimeout:    10 * time.Second,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 

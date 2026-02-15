@@ -5,25 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"zmessage/server/modules/message"
+	"zmessage/server/modules/user"
 )
 
 // RegisterMessageRoutes 注册消息路由
-func RegisterMessageRoutes(r *gin.Engine, svc message.Service, wsMgr WSManager) {
+func RegisterMessageRoutes(r *gin.Engine, msgSvc message.Service, userSvc user.Service, wsMgr WSManager) {
 	msg := r.Group("/api/conversations/:id/messages")
-	// 简单的token验证，实际应该使用user.Service
-	msg.Use(func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.JSON(401, ErrorResponse{Error: "USER_UNAUTHORIZED"})
-			c.Abort()
-			return
-		}
-		// TODO: 实际项目中应该调用user.Service.ValidateToken
-		c.Set("auth", &AuthContext{UserID: 1}) // 临时使用固定用户ID
-		c.Next()
-	})
+	msg.Use(AuthMiddleware(userSvc))
 	{
-		msg.GET("", handleGetMessages(svc))
+		msg.GET("", handleGetMessages(msgSvc))
+		msg.POST("", handleSendMessage(msgSvc))
 	}
 }
 
@@ -100,4 +91,79 @@ type MessageResponse struct {
 	Content       string `json:"content"`
 	Status        string `json:"status"`
 	CreatedAt     int64  `json:"created_at"`
+}
+
+// SendMessageRequest 发送消息请求
+type SendMessageRequest struct {
+	Type    string `json:"type"`
+	Content string `json:"content"`
+}
+
+// handleSendMessage 处理发送消息
+func handleSendMessage(svc message.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := GetAuthContext(c)
+		if auth == nil {
+			return
+		}
+
+		// 获取会话ID
+		idStr := c.Param("id")
+		convID, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			BadRequest(c, "无效的会话ID")
+			return
+		}
+
+		// 解析请求体
+		var req SendMessageRequest
+		if err := c.BindJSON(&req); err != nil {
+			BadRequest(c, "无效的请求格式")
+			return
+		}
+
+		// 验证消息类型和内容
+		if req.Type == "" || req.Content == "" {
+			BadRequest(c, "消息类型和内容不能为空")
+			return
+		}
+
+		// 获取会话信息以确定接收者
+		conv, err := svc.GetConversation(convID, auth.UserID)
+		if err != nil {
+			InternalError(c, err)
+			return
+		}
+
+		// 确定接收者ID
+		var receiverID int64
+		if conv.UserAID == auth.UserID {
+			receiverID = conv.UserBID
+		} else {
+			receiverID = conv.UserAID
+		}
+
+		// 调用消息服务发送
+		msg, err := svc.SendMessage(&message.SendMessageRequest{
+			From:    auth.UserID,
+			To:      receiverID,
+			Type:    req.Type,
+			Content: req.Content,
+		})
+		if err != nil {
+			InternalError(c, err)
+			return
+		}
+
+		c.JSON(200, MessageResponse{
+			ID:            msg.ID,
+			ConversationID: msg.ConversationID,
+			SenderID:      msg.SenderID,
+			ReceiverID:    msg.ReceiverID,
+			Type:          msg.Type,
+			Content:       msg.Content,
+			Status:        msg.Status,
+			CreatedAt:     msg.CreatedAt,
+		})
+	}
 }
