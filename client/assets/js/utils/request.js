@@ -14,7 +14,16 @@ export class ApiClient {
     }
 
     async request(method, path, data = null, options = {}) {
-        const url = this.baseURL + path;
+        // 拼接 URL
+        let url = this.baseURL + path;
+
+        // 如果 baseURL 为空，去掉 path 开头的 / 使其成为相对路径
+        // 这样可以受 index.html 中 <base href> 的控制
+        // 开发环境: <base href="/"> → /api/...
+        // 生产环境: <base href="/zmessage/"> → /zmessage/api/...
+        if (!this.baseURL && path.startsWith('/')) {
+            url = path.substring(1);
+        }
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers

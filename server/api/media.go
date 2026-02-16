@@ -91,8 +91,9 @@ func handleUpload(svc media.Service) gin.HandlerFunc {
 		c.JSON(200, MediaResponse{
 			ID:         media.ID,
 			Type:       media.Type,
-			OriginalURL: "/api/media/" + strconv.FormatInt(media.ID, 10),
-			ThumbnailURL: "/api/media/" + strconv.FormatInt(media.ID, 10) + "/thumb",
+			// 返回相对路径，前端通过 <base href> 控制前缀
+			OriginalURL: "api/media/" + strconv.FormatInt(media.ID, 10),
+			ThumbnailURL: "api/media/" + strconv.FormatInt(media.ID, 10) + "/thumb",
 			Size:        media.Size,
 			MimeType:    media.MimeType,
 			Width:       getIntOrZero(media.Width),

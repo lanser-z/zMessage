@@ -26,7 +26,8 @@ export class ConnectionModule {
     // 连接 SSE
     connect() {
         const token = this.auth.getToken();
-        const sseUrl = `${this.config.apiBaseUrl}/api/sse/subscribe?token=${token}`;
+        // 使用相对路径，受 <base href> 影响
+        const sseUrl = `api/sse/subscribe?token=${token}`;
         console.log(`[SSE] Connecting (${this.isMobile ? 'mobile' : 'desktop'} detected):`, sseUrl);
 
         // 关闭旧的连接（防止累积）

@@ -8,8 +8,11 @@ import { MediaModule } from './modules/media.js';
 import { UIModule } from './modules/ui.js';
 
 // 配置
+// apiBaseUrl 留空，使用相对路径，通过 index.html 的 <base href> 控制前缀
+// 开发环境: <base href="/"> → 请求 /api/...
+// 生产环境: <base href="/zmessage/"> → 请求 /zmessage/api/...
 const config = {
-    apiBaseUrl: 'http://203.83.228.222:9405'
+    apiBaseUrl: ''
 };
 
 // 应用状态

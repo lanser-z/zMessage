@@ -165,8 +165,9 @@ func toUserResponse(user *models.User) *userResponse {
 	}
 
 	// TODO: 处理头像URL（需要媒体模块）
+	// 返回相对路径，前端通过 <base href> 控制前缀
 	if user.AvatarID != nil {
-		resp.Avatar = "/api/media/" + strconv.FormatInt(*user.AvatarID, 10)
+		resp.Avatar = "api/media/" + strconv.FormatInt(*user.AvatarID, 10)
 	}
 
 	return resp

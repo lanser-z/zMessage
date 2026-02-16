@@ -174,11 +174,12 @@ func (s *service) GetWithURL(id int64, baseURL string) (*MediaWithURL, error) {
 
 	result := &MediaWithURL{
 		Media:      media,
-		OriginalURL: fmt.Sprintf("%s/api/media/%d", baseURL, id),
+		// 返回相对路径，前端通过 <base href> 控制前缀
+		OriginalURL: fmt.Sprintf("api/media/%d", id),
 	}
 
 	if media.ThumbnailPath != "" {
-		result.ThumbnailURL = fmt.Sprintf("%s/api/media/%d/thumb", baseURL, id)
+		result.ThumbnailURL = fmt.Sprintf("api/media/%d/thumb", id)
 	}
 
 	return result, nil

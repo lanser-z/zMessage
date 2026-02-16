@@ -52,10 +52,11 @@ export class MediaModule {
     }
 
     // 获取媒体URL
+    // 注意：返回相对路径，会受 <base href="/zmessage/"> 影响
     getMediaUrl(mediaId, thumbnail = false) {
         return thumbnail
-            ? `/api/media/${mediaId}/thumb`
-            : `/api/media/${mediaId}`;
+            ? `api/media/${mediaId}/thumb`
+            : `api/media/${mediaId}`;
     }
 
     // 从本地缓存获取媒体信息
