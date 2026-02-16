@@ -85,7 +85,7 @@ func main() {
 		wsMgr.HandleConnection(conn)
 	})
 
-	addr := "0.0.0.0:9405"
+	addr := "localhost:9405"
 	if len(os.Args) > 2 {
 		addr = os.Args[2]
 	}
