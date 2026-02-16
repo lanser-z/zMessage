@@ -13,7 +13,7 @@ export class ShareModule {
             recentCount = 50      // 默认50条
         } = options;
 
-        const response = await this.apiClient.post(`/conversations/${conversationID}/share`, {
+        const response = await this.apiClient.post(`/api/conversations/${conversationID}/share`, {
             expire_days: expireDays,
             message_range: messageRange,
             recent_count: recentCount
@@ -45,7 +45,7 @@ export class ShareModule {
 
     // 获取我的分享列表
     async getMyShares(page = 1, limit = 20) {
-        const response = await this.apiClient.get(`/shares?page=${page}&limit=${limit}`);
+        const response = await this.apiClient.get(`/api/shares?page=${page}&limit=${limit}`);
         const baseURL = this.getBaseURL();
         // 为每个分享项添加完整 URL
         if (response.shares) {
@@ -58,7 +58,7 @@ export class ShareModule {
 
     // 删除分享
     async deleteShare(shareID) {
-        return await this.apiClient.delete(`/shares/${shareID}`);
+        return await this.apiClient.delete(`/api/shares/${shareID}`);
     }
 
     // 复制分享链接到剪贴板

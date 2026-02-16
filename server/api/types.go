@@ -98,7 +98,12 @@ func AuthMiddleware(svc user.Service) gin.HandlerFunc {
 			tokenStr = token[7:]
 		}
 
-		fmt.Printf("[AUTH] Validating token: %s...\n", tokenStr[:20])
+		// 安全地打印 token 前 20 个字符
+		if len(tokenStr) > 20 {
+			fmt.Printf("[AUTH] Validating token: %s...\n", tokenStr[:20])
+		} else {
+			fmt.Printf("[AUTH] Validating token: %s\n", tokenStr)
+		}
 
 		// 验证Token
 		userID, err := svc.ValidateToken(tokenStr)

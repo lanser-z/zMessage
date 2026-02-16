@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -166,12 +167,17 @@ func handleGetMyShares(c *gin.Context) {
 		limit = 20
 	}
 
+	fmt.Printf("[SHARES] Getting shares for user %d, page=%d, limit=%d\n", auth.UserID, page, limit)
+
 	// 获取分享列表
 	shares, total, err := shareSvc.ListShares(auth.UserID, page, limit)
 	if err != nil {
+		fmt.Printf("[SHARES] Error getting shares: %v\n", err)
 		InternalError(c, err)
 		return
 	}
+
+	fmt.Printf("[SHARES] Found %d shares, total=%d\n", len(shares), total)
 
 	c.JSON(200, gin.H{
 		"shares": shares,
