@@ -596,3 +596,445 @@ body {
         display: none;
     }
 }
+
+/* ========================================
+   分享功能样式
+   ======================================== */
+
+/* 侧边栏菜单项 */
+.sidebar-menu {
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.menu-icon {
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+.menu-text {
+    font-size: 14px;
+    color: #333;
+}
+
+/* 聊天头部分享按钮 */
+.share-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+    transition: opacity 0.2s;
+}
+
+.share-btn:hover {
+    opacity: 0.7;
+}
+
+/* 分享对话框遮罩 */
+.share-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.share-dialog {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.share-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.share-dialog-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+    background-color: #f5f5f5;
+}
+
+.share-dialog-content {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #666;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.radio-group input[type="number"] {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.share-dialog-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.share-dialog-actions button {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.share-dialog-actions button:hover {
+    opacity: 0.8;
+}
+
+.btn-primary {
+    background-color: #007AFF;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #e5e5e5;
+    color: #333;
+}
+
+/* 分享成功对话框 */
+.share-url-box {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.share-url-box input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    background-color: #f9f9f9;
+}
+
+.btn-copy {
+    padding: 10px 16px;
+    background-color: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}
+
+/* 我的分享列表 */
+.shares-view {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.shares-header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 8px;
+}
+
+.shares-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.shares-list {
+    padding: 16px;
+}
+
+.share-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.share-item.expired {
+    opacity: 0.6;
+}
+
+.share-item-info {
+    flex: 1;
+}
+
+.share-item-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.share-item-meta {
+    font-size: 13px;
+    color: #999;
+}
+
+.share-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #007AFF;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.btn-link.btn-danger {
+    color: #ff3b30;
+}
+
+.expired-badge {
+    font-size: 12px;
+    color: #999;
+    padding: 4px 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+/* 分享页面 */
+.shared-view {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.shared-header {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.shared-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.shared-header h2 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.shared-participants {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.participant-badge {
+    background-color: #f0f0f0;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+}
+
+.shared-meta {
+    font-size: 13px;
+    color: #999;
+}
+
+.shared-messages {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+    flex: 1;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.shared-message {
+    margin-bottom: 20px;
+}
+
+.shared-message-sender {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.shared-message-content {
+    padding: 12px 16px;
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.shared-message-time {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.shared-message img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+}
+
+.shared-footer {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+}
+
+.shared-expire-info {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.shared-branding {
+    font-size: 12px;
+    color: #ccc;
+    text-align: center;
+}
+
+.error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.error-page h2 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.error-page p {
+    color: #999;
+    font-size: 14px;
+}

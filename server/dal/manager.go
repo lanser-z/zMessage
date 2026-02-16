@@ -75,6 +75,10 @@ CREATE TABLE IF NOT EXISTS shared_conversations (
     created_by INTEGER NOT NULL,
     expire_at INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
+    first_message_id INTEGER DEFAULT 0,
+    last_message_id INTEGER DEFAULT 0,
+    message_count INTEGER DEFAULT 0,
+    view_count INTEGER DEFAULT 0,
     FOREIGN KEY (conversation_id) REFERENCES conversations(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );

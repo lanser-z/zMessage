@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth.js';
 import { ConnectionModule } from './modules/connection_sse.js';  // SSE 版本
 import { MessageModule } from './modules/message.js';
 import { MediaModule } from './modules/media.js';
+import { ShareModule } from './modules/share.js';
 import { UIModule } from './modules/ui.js';
 
 // 配置
@@ -16,7 +17,7 @@ const config = {
 };
 
 // 应用状态
-let auth, connection, message, media, ui, store, apiClient;
+let auth, connection, message, media, share, ui, store, apiClient;
 
 // 初始化应用
 async function init() {
@@ -32,13 +33,14 @@ async function init() {
         auth = new AuthModule(apiClient, store);
         message = new MessageModule(apiClient, null, store, auth);
         media = new MediaModule(apiClient, store);
+        share = new ShareModule(apiClient, store);
         connection = new ConnectionModule(auth, message, config);
 
         // 设置连接模块到消息模块
         message.connection = connection;
 
         // 初始化UI
-        ui = new UIModule(auth, connection, message, media, apiClient);
+        ui = new UIModule(auth, connection, message, media, share, apiClient);
         ui.init();
 
         console.log('Application initialized');

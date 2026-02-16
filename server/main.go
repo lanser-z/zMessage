@@ -13,6 +13,7 @@ import (
 	"zmessage/server/dal"
 	"zmessage/server/modules/media"
 	"zmessage/server/modules/message"
+	"zmessage/server/modules/share"
 	"zmessage/server/modules/user"
 	"zmessage/server/sse"
 	"zmessage/server/ws"
@@ -41,6 +42,7 @@ func main() {
 	userSvc := user.NewService(dalMgr, "test-secret")
 	mediaSvc := media.NewService(dalMgr, dataDir+"/media")
 	msgSvc := message.NewService(dalMgr)
+	shareSvc := share.NewService(dalMgr)
 	wsMgr := ws.NewManager(msgSvc, userSvc)
 
 	r := gin.Default()
@@ -65,6 +67,7 @@ func main() {
 	api.RegisterConversationRoutes(r, msgSvc, userSvc, nil)
 	api.RegisterMessageRoutes(r, msgSvc, userSvc, nil)
 	api.RegisterMediaRoutes(r, mediaSvc, userSvc)
+	api.RegisterShareRoutes(r, shareSvc, userSvc)
 
 	// SSE 路由
 	sseHandler := sse.NewHandler(userSvc)

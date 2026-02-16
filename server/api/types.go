@@ -153,6 +153,11 @@ func NotFound(c *gin.Context, message string) {
 	Error(c, 404, message)
 }
 
+// Forbidden 403错误
+func Forbidden(c *gin.Context, message string) {
+	Error(c, 403, message)
+}
+
 // InternalError 500错误
 func InternalError(c *gin.Context, err error) {
 	Error(c, 500, "INTERNAL_ERROR")

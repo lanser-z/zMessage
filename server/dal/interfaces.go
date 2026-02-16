@@ -90,6 +90,8 @@ type SharedConversationDAL interface {
 	GetByID(id int64) (*models.SharedConversation, error)
 	GetByToken(token string) (*models.SharedConversation, error)
 	GetByConversation(convID int64) ([]*models.SharedConversation, error)
+	GetByCreator(creatorID int64, page, limit int) ([]*models.SharedConversation, int, error)
+	UpdateViewCount(id int64, count int) error
 	Delete(id int64) error
 	DeleteExpired() error
 }
