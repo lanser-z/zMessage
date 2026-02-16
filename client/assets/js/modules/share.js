@@ -46,6 +46,13 @@ export class ShareModule {
     // 获取我的分享列表
     async getMyShares(page = 1, limit = 20) {
         const response = await this.apiClient.get(`/shares?page=${page}&limit=${limit}`);
+        const baseURL = this.getBaseURL();
+        // 为每个分享项添加完整 URL
+        if (response.shares) {
+            response.shares.forEach(share => {
+                share.full_url = `${baseURL}/?shared=${share.share_token}`;
+            });
+        }
         return response;
     }
 
