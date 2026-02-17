@@ -1,0 +1,23 @@
+# 编译产物
+zmessage-server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 压缩包
+*.tgz
+*.tar.gz
+*.zip
+
+# 数据库
+data/messages.db
+data/*.db
+
+# 日志
+*.log
+
+# 测试
+*.test
+coverage.out
