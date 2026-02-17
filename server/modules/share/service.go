@@ -135,15 +135,8 @@ func (s *service) GetShareMessages(token string, beforeID int64, limit int) ([]*
 	}
 
 	// 确定查询范围
+	// 注意：GetByConversation 使用 id < ? 条件，所以传入 0 表示不限制
 	actualBeforeID := beforeID
-	if actualBeforeID == 0 {
-		actualBeforeID = sc.LastMessageID
-	}
-
-	// 限制不超过分享范围
-	if sc.FirstMessageID > 0 && actualBeforeID > sc.LastMessageID {
-		actualBeforeID = sc.LastMessageID
-	}
 
 	// 获取消息
 	messages, err := s.dalMgr.Message().GetByConversation(sc.ConversationID, actualBeforeID, limit)
@@ -156,7 +149,10 @@ func (s *service) GetShareMessages(token string, beforeID int64, limit int) ([]*
 	var hasMore bool
 
 	for _, msg := range messages {
-		// 检查是否在分享范围内
+		// 检查是否超出分享范围（只包含分享时存在的消息）
+		if sc.LastMessageID > 0 && msg.ID > sc.LastMessageID {
+			continue // 跳过分享后新发送的消息
+		}
 		if sc.FirstMessageID > 0 && msg.ID < sc.FirstMessageID {
 			hasMore = false // 到达分享范围的起点
 			break
