@@ -800,6 +800,13 @@ body {
     white-space: nowrap;
 }
 
+.btn-copy.copied,
+.btn-link.copied {
+    background-color: #34C759 !important;
+    color: white !important;
+    pointer-events: none;
+}
+
 .hint {
     margin-top: 12px;
     font-size: 12px;

@@ -666,8 +666,12 @@ export class UIModule {
                     const success = await this.share.copyShareURL(shareData.full_url);
                     const copyBtn = e.currentTarget;
                     if (success) {
-                        copyBtn.textContent = '已复制!';
-                        setTimeout(() => copyBtn.textContent = '复制', 2000);
+                        copyBtn.textContent = '✓ 已复制';
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.textContent = '复制';
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
                     } else {
                         alert('复制失败，请手动复制');
                     }
@@ -712,9 +716,11 @@ export class UIModule {
                     if (action === 'copy-share') {
                         const success = await this.share.copyShareURL(shareUrl);
                         if (success) {
-                            el.textContent = '已复制!';
+                            el.textContent = '✓ 已复制';
+                            el.classList.add('copied');
                             setTimeout(() => {
                                 el.textContent = '复制链接';
+                                el.classList.remove('copied');
                             }, 2000);
                         } else {
                             alert('复制失败');
