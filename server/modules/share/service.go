@@ -66,8 +66,9 @@ func (s *service) CreateShare(req *models.ShareRequest, creatorID int64) (*model
 			return nil, fmt.Errorf("get messages: %w", err)
 		}
 		if len(messages) > 0 {
-			firstMessageID = messages[0].ID
-			lastMessageID = messages[len(messages)-1].ID
+			// GetByConversation 返回降序，第一个是最新的，最后面是最老的
+			lastMessageID = messages[0].ID           // 最新消息ID
+			firstMessageID = messages[len(messages)-1].ID  // 最老消息ID
 			messageCount = len(messages)
 		}
 	} else {
@@ -77,8 +78,9 @@ func (s *service) CreateShare(req *models.ShareRequest, creatorID int64) (*model
 			return nil, fmt.Errorf("get all messages: %w", err)
 		}
 		if len(allMessages) > 0 {
-			firstMessageID = allMessages[0].ID
-			lastMessageID = allMessages[len(allMessages)-1].ID
+			// GetByConversation 返回降序，第一个是最新的，最后面是最老的
+			lastMessageID = allMessages[0].ID           // 最新消息ID
+			firstMessageID = allMessages[len(allMessages)-1].ID  // 最老消息ID
 			messageCount = len(allMessages)
 		}
 	}

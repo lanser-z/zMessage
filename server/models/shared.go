@@ -18,10 +18,10 @@ type SharedConversation struct {
 
 // ShareRequest 创建分享请求
 type ShareRequest struct {
-	ConversationID int64  `json:"conversation_id" binding:"required"`
-	ExpireDays     int    `json:"expire_days"`      // 过期天数，0=永久，默认7
-	MessageRange   string `json:"message_range"`    // "all", "recent"
-	RecentCount    int    `json:"recent_count"`     // 最近N条，默认50
+	ConversationID int64  `json:"conversation_id"` // 从URL路径获取，不由客户端提供
+	ExpireDays     int    `json:"expire_days"`     // 过期天数，0=永久，默认7
+	MessageRange   string `json:"message_range"`   // "all", "recent"
+	RecentCount    int    `json:"recent_count"`    // 最近N条，默认50
 }
 
 // ParticipantInfo 参与者信息（脱敏）

@@ -19,11 +19,11 @@ export class ShareModule {
             recent_count: recentCount
         });
 
-        // 返回完整的分享 URL
+        // 返回完整的分享 URL（使用URL参数方式）
         const baseURL = this.getBaseURL();
         return {
             ...response,
-            full_url: `${baseURL}/shared/${response.share_token}`
+            full_url: `${baseURL}/?shared=${response.share_token}`
         };
     }
 

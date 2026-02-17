@@ -834,6 +834,9 @@ export class UIModule {
 
     // 渲染分享的消息
     _renderSharedMessages(messages) {
+        if (!messages || messages.length === 0) {
+            return '<div class="empty-messages">暂无消息</div>';
+        }
         return messages.map(msg => `
             <div class="shared-message ${msg.sender_id === messages[0]?.sender_id ? 'same-sender' : ''}">
                 <div class="shared-message-sender">${this._escapeHtml(msg.sender_nickname)}</div>
