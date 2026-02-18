@@ -660,17 +660,17 @@ export class UIModule {
         // 绑定事件
         dialog.querySelectorAll('[data-action]').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const action = e.currentTarget.dataset.action;
+                const action = e.target.dataset.action;
+                const button = e.target;
 
                 if (action === 'copy') {
                     const success = await this.share.copyShareURL(shareData.full_url);
-                    const copyBtn = e.currentTarget;
                     if (success) {
-                        copyBtn.textContent = '✓ 已复制';
-                        copyBtn.classList.add('copied');
+                        button.textContent = '✓ 已复制';
+                        button.classList.add('copied');
                         setTimeout(() => {
-                            copyBtn.textContent = '复制';
-                            copyBtn.classList.remove('copied');
+                            button.textContent = '复制';
+                            button.classList.remove('copied');
                         }, 2000);
                     } else {
                         alert('复制失败，请手动复制');
